@@ -52,18 +52,6 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="rounded-2xl border-border bg-background/40">
-              <CardContent className="p-5 text-sm text-muted-foreground">
-                <p className="text-foreground font-semibold tracking-tight">
-                  Как работает доступ
-                </p>
-                <p className="mt-2">
-                  Pocket Partners отправляет события (регистрация/FTD) на наш
-                  постбек. После этого ваш Trader ID появляется в базе, и вы
-                  получаете доступ к меню сигналов.
-                </p>
-              </CardContent>
-            </Card>
           </div>
         </div>
 
