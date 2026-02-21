@@ -1,9 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { Pool } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-admin-password",
 };
 
 const ADMIN_PASSWORD = "AK5917906";
@@ -12,6 +13,59 @@ type Body = {
   traderId?: string;
   sumdep?: number | null;
 };
+
+async function ensurePpTradersTable() {
+  const dbUrl = Deno.env.get("SUPABASE_DB_URL");
+  if (!dbUrl) {
+    console.warn("[admin-grant] SUPABASE_DB_URL missing");
+    return;
+  }
+
+  const pool = new Pool(dbUrl, 1, true);
+  const client = await pool.connect();
+  try {
+    console.log("[admin-grant] ensuring pp_traders table");
+
+    await client.queryArray(`
+      CREATE TABLE IF NOT EXISTS public.pp_traders (
+        trader_id TEXT PRIMARY KEY,
+        registered BOOLEAN,
+        ftd BOOLEAN,
+        sumdep NUMERIC,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    await client.queryArray(`
+      ALTER TABLE public.pp_traders ENABLE ROW LEVEL SECURITY;
+    `);
+
+    // Нужен для чтения из фронта (OnboardingWizard делает select через anon key).
+    await client.queryArray(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM pg_policies
+          WHERE schemaname = 'public'
+            AND tablename = 'pp_traders'
+            AND policyname = 'pp_traders_public_read'
+        ) THEN
+          CREATE POLICY "pp_traders_public_read"
+          ON public.pp_traders
+          FOR SELECT
+          USING (true);
+        END IF;
+      END
+      $$;
+    `);
+
+    console.log("[admin-grant] pp_traders ensured");
+  } finally {
+    client.release();
+    await pool.end();
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -31,6 +85,9 @@ Deno.serve(async (req) => {
     console.warn("[admin-grant] unauthorized");
     return new Response("Unauthorized", { status: 401, headers: corsHeaders });
   }
+
+  // Само-чинит проблему с отсутствующей таблицей (и нужной policy для чтения)
+  await ensurePpTradersTable();
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
