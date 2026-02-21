@@ -35,7 +35,7 @@ export default function Signals() {
                   AI TRADE — Сигналы
                 </h1>
                 <Badge className="border-primary/25 bg-primary/10 text-primary">
-                  Verified
+                  {access?.isAdmin ? "Admin" : "Verified"}
                 </Badge>
               </div>
               <p className="mt-1 text-sm text-muted-foreground">

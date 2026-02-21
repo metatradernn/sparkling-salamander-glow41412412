@@ -4,6 +4,7 @@ export type AccessState = {
   traderId: string;
   sumdep?: number | null;
   verifiedAt: number;
+  isAdmin?: boolean;
 };
 
 export function getAccess(): AccessState | null {

@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import AdminUnlockPanel from "@/components/ai-trade/AdminUnlockPanel";
 import {
   ArrowRight,
   CheckCircle2,
@@ -23,6 +24,9 @@ import {
 const RU_LINK = "https://po-ru4.click/smart/SLjZBE1edTSNUa";
 const CIS_LINK = "https://u3.shortink.io/smart/SLjZBE1edTSNUa";
 const TG_SUPPORT = "https://t.me/max_supportTraide";
+
+const OWNER_ID = "MaxLavrin";
+const ADMIN_PASSWORD = "AK5917906";
 
 type Step = 1 | 2 | 3;
 
@@ -54,7 +58,10 @@ export default function OnboardingWizard() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
   const [traderId, setTraderId] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
   const [checking, setChecking] = useState(false);
+
+  const isOwner = traderId.trim() === OWNER_ID;
 
   const progress = useMemo(() => {
     if (step === 1) return 22;
@@ -62,17 +69,48 @@ export default function OnboardingWizard() {
     return 100;
   }, [step]);
 
+  function adminUnlock() {
+    const id = traderId.trim();
+    if (id !== OWNER_ID) return;
+
+    if (!adminPassword.trim()) {
+      showError("Введите пароль администратора.");
+      return;
+    }
+
+    if (adminPassword.trim() !== ADMIN_PASSWORD) {
+      showError("Неверный пароль администратора.");
+      return;
+    }
+
+    setAccess({
+      traderId: OWNER_ID,
+      sumdep: null,
+      verifiedAt: Date.now(),
+      isAdmin: true,
+    });
+
+    showSuccess("Вход администратора выполнен.");
+    navigate("/signals");
+  }
+
   async function verify() {
+    const id = traderId.trim();
+
+    if (!id) {
+      showError("Введите ID аккаунта Pocket Option.");
+      return;
+    }
+
+    if (id === OWNER_ID) {
+      showError("Для MaxLavrin используйте вход администратора ниже.");
+      return;
+    }
+
     if (!isSupabaseConfigured) {
       showError(
         "Supabase не настроен. Выберите проект Supabase в интеграции и нажмите Restart.",
       );
-      return;
-    }
-
-    const id = traderId.trim();
-    if (!id) {
-      showError("Введите ID аккаунта Pocket Option.");
       return;
     }
 
@@ -108,8 +146,8 @@ export default function OnboardingWizard() {
     }
 
     setAccess({
-      traderId: data!.trader_id,
-      sumdep: data?.sumdep ?? null,
+      traderId: data.trader_id,
+      sumdep: data.sumdep ?? null,
       verifiedAt: Date.now(),
     });
 
@@ -134,10 +172,7 @@ export default function OnboardingWizard() {
             </Badge>
           </div>
 
-          <Progress
-            value={progress}
-            className="h-2 rounded-full bg-secondary"
-          />
+          <Progress value={progress} className="h-2 rounded-full bg-secondary" />
         </div>
       </CardHeader>
 
@@ -276,10 +311,14 @@ export default function OnboardingWizard() {
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
               <Input
                 value={traderId}
-                onChange={(e) => setTraderId(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setTraderId(next);
+                  if (next.trim() !== OWNER_ID) setAdminPassword("");
+                }}
                 placeholder="Например: 123456789"
                 className="h-12 rounded-xl border-border bg-background/40 text-base"
-                inputMode="numeric"
+                inputMode={isOwner ? "text" : "numeric"}
               />
               <Button
                 onClick={verify}
@@ -289,6 +328,18 @@ export default function OnboardingWizard() {
                 {checking ? "Проверяем..." : "Проверить"}
               </Button>
             </div>
+
+            {isOwner && (
+              <div className="space-y-3">
+                <Separator className="bg-border/70" />
+                <AdminUnlockPanel
+                  password={adminPassword}
+                  onPasswordChange={setAdminPassword}
+                  onUnlock={adminUnlock}
+                  disabled={checking}
+                />
+              </div>
+            )}
 
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-muted-foreground">
