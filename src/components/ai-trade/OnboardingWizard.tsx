@@ -135,11 +135,13 @@ export default function OnboardingWizard() {
       return;
     }
 
-    const ok = Boolean(data.ftd) || (data.sumdep ?? 0) > 0;
+    const hasRegistration = Boolean(data.registered);
+    const hasDeposit = Boolean(data.ftd) || (data.sumdep ?? 0) > 0;
+    const ok = hasRegistration && hasDeposit;
 
     if (!ok) {
       showError(
-        "Доступ отклонён: вы не зарегистрированы по нашей ссылке или не пополнили баланс.",
+        "Доступ отклонён: не подтверждена регистрация по нашей ссылке и/или депозит. Напишите в поддержку.",
       );
       window.open(TG_SUPPORT, "_blank", "noopener,noreferrer");
       return;
