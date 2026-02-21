@@ -110,3 +110,5 @@ export default function AccessStatusCard() {
         )}
       </CardContent>
     </Card>
+  );
+}
