@@ -63,6 +63,13 @@ export default function OnboardingWizard() {
   }, [step]);
 
   async function verify() {
+    if (!supabase) {
+      showError(
+        "Supabase не настроен: задайте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY (после этого перезапустите приложение).",
+      );
+      return;
+    }
+
     const id = traderId.trim();
     if (!id) {
       showError("Введите ID аккаунта Pocket Option.");
