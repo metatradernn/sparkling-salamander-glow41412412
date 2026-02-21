@@ -176,7 +176,31 @@ export default function AssetBankCard({
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Asset
           </p>
-          <p className="mt-2 break-words text-base font-semibold leading-tight tracking-tight sm:text-[17px]">
+          <p
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              const text = name.replace(/\s*OTC\s*$/i, "");
+              void navigator.clipboard.writeText(text).then(() => {
+                showSuccess(`Скопировано: ${text}`);
+              });
+            }}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter" && e.key !== " ") return;
+              e.stopPropagation();
+              const text = name.replace(/\s*OTC\s*$/i, "");
+              void navigator.clipboard.writeText(text).then(() => {
+                showSuccess(`Скопировано: ${text}`);
+              });
+            }}
+            title="Нажмите, чтобы скопировать"
+            className={cn(
+              "mt-2 break-words text-base font-semibold leading-tight tracking-tight sm:text-[17px]",
+              "cursor-copy select-none rounded-lg outline-none transition-colors",
+              "hover:text-primary focus-visible:ring-2 focus-visible:ring-primary/35",
+            )}
+          >
             {name}
           </p>
 
