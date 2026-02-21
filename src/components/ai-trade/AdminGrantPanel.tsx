@@ -45,8 +45,38 @@ export default function AdminGrantPanel({ adminPassword }: AdminGrantPanelProps)
     setSending(false);
 
     if (error) {
-      console.error("[admin-grant-panel] invoke error", { message: error.message });
-      showError("Не удалось выдать доступ. Попробуйте ещё раз.");
+      const message = (error as any)?.message ? String((error as any).message) : "";
+      const status = (error as any)?.context?.status as number | undefined;
+      const body = (error as any)?.context?.body ? String((error as any).context.body) : "";
+
+      console.error("[admin-grant-panel] invoke error", {
+        message,
+        status,
+        body,
+      });
+
+      const haystack = `${message}\n${body}`.toLowerCase();
+
+      if (
+        haystack.includes("pp_traders") ||
+        haystack.includes("could not find the table") ||
+        haystack.includes("schema cache")
+      ) {
+        showError("Не удалось выдать доступ: в Supabase нет таблицы pp_traders.");
+        return;
+      }
+
+      if (status === 401 || haystack.includes("unauthorized")) {
+        showError("Не удалось выдать доступ: неверный admin-пароль.");
+        return;
+      }
+
+      if (status === 404) {
+        showError("Не удалось выдать доступ: функция admin-grant не найдена (404).");
+        return;
+      }
+
+      showError("Не удалось выдать доступ. Подробности — в консоли браузера.");
       return;
     }
 
