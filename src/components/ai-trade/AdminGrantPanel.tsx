@@ -76,6 +76,15 @@ export default function AdminGrantPanel({ adminPassword }: AdminGrantPanelProps)
         return;
       }
 
+      if (
+        haystack.includes("failed to fetch") ||
+        haystack.includes("networkerror") ||
+        haystack.includes("load failed")
+      ) {
+        showError("Запрос не дошёл до функции (CORS/сеть). Нажмите Restart и попробуйте ещё раз.");
+        return;
+      }
+
       showError("Не удалось выдать доступ. Подробности — в консоли браузера.");
       return;
     }

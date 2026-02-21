@@ -3,6 +3,7 @@ import { Pool } from "https://deno.land/x/postgres@v0.17.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-admin-password",
 };
@@ -89,8 +90,25 @@ Deno.serve(async (req) => {
   // Само-чинит проблему с отсутствующей таблицей (и нужной policy для чтения)
   await ensurePpTradersTable();
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!supabaseUrl) {
+    console.error("[admin-grant] SUPABASE_URL missing");
+    return new Response("Server misconfigured: SUPABASE_URL missing", {
+      status: 500,
+      headers: corsHeaders,
+    });
+  }
+
+  if (!serviceRoleKey) {
+    console.error("[admin-grant] SUPABASE_SERVICE_ROLE_KEY missing");
+    return new Response("Server misconfigured: SUPABASE_SERVICE_ROLE_KEY missing", {
+      status: 500,
+      headers: corsHeaders,
+    });
+  }
+
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   const body = (await req.json().catch(() => ({}))) as Body;
