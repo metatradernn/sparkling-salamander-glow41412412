@@ -17,6 +17,7 @@ type AssetBankCardProps = {
 
 type TimeframeValue = "1m" | "2m" | "3m" | "5m";
 type ResultDirection = "BUY" | "SELL";
+type SignalLevel = 1 | 2 | 3 | 4;
 
 const tones: Record<NonNullable<AssetBankCardProps["tone"]>, string> = {
   indigo:
@@ -40,6 +41,52 @@ function randomResult(): ResultDirection {
   return Math.random() > 0.5 ? "BUY" : "SELL";
 }
 
+function hashString(input: string) {
+  let h = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    h = (h << 5) - h + input.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+}
+
+function levelFor(name: string, timeframe: TimeframeValue, slotMs = 30_000): SignalLevel {
+  const base = hashString(`${name}::${timeframe}`);
+  const slot = Math.floor(Date.now() / slotMs);
+  const seed = base + slot * 97;
+
+  const x = Math.sin(seed) * 10_000;
+  const frac = x - Math.floor(x);
+  const n = 1 + Math.floor(frac * 4); // 1..4
+  return (Math.min(4, Math.max(1, n)) as SignalLevel);
+}
+
+const levelMeta: Record<
+  SignalLevel,
+  { label: string; activeDotClass: string; subtleGlowClass: string }
+> = {
+  4: {
+    label: "Уверенный",
+    activeDotClass: "bg-emerald-400/80",
+    subtleGlowClass: "shadow-[0_0_0_3px] shadow-emerald-500/10",
+  },
+  3: {
+    label: "Хороший",
+    activeDotClass: "bg-sky-400/80",
+    subtleGlowClass: "shadow-[0_0_0_3px] shadow-sky-500/10",
+  },
+  2: {
+    label: "Нейтрально",
+    activeDotClass: "bg-amber-400/80",
+    subtleGlowClass: "shadow-[0_0_0_3px] shadow-amber-500/10",
+  },
+  1: {
+    label: "Плохой",
+    activeDotClass: "bg-rose-400/80",
+    subtleGlowClass: "shadow-[0_0_0_3px] shadow-rose-500/10",
+  },
+};
+
 export default function AssetBankCard({
   name,
   tone = "slate",
@@ -50,6 +97,18 @@ export default function AssetBankCard({
   const [timeframe, setTimeframe] = React.useState<TimeframeValue>("1m");
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [result, setResult] = React.useState<ResultDirection | null>(null);
+  const [signalLevel, setSignalLevel] = React.useState<SignalLevel>(() =>
+    levelFor(name, "1m"),
+  );
+
+  React.useEffect(() => {
+    setSignalLevel(levelFor(name, timeframe));
+    const id = window.setInterval(() => {
+      setSignalLevel(levelFor(name, timeframe));
+    }, 30_000);
+
+    return () => window.clearInterval(id);
+  }, [name, timeframe]);
 
   const analyze = React.useCallback(() => {
     if (isAnalyzing) return;
@@ -213,11 +272,31 @@ export default function AssetBankCard({
             </div>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-foreground/20" />
-            <div className="h-2 w-2 rounded-full bg-foreground/20" />
-            <div className="h-2 w-2 rounded-full bg-foreground/20" />
-            <div className="h-2 w-2 rounded-full bg-foreground/20" />
+          <div
+            className="flex items-center gap-2"
+            aria-label={`Уровень сигнала: ${signalLevel}/4 • ${levelMeta[signalLevel].label}`}
+            title={`Уровень сигнала: ${signalLevel}/4 • ${levelMeta[signalLevel].label}`}
+          >
+            <div
+              className={cn(
+                "flex items-center gap-1.5 rounded-full border border-foreground/10 bg-foreground/5 px-2 py-1",
+                levelMeta[signalLevel].subtleGlowClass,
+              )}
+            >
+              {Array.from({ length: 4 }).map((_, idx) => {
+                const active = idx < signalLevel;
+                return (
+                  <div
+                    key={idx}
+                    className={cn(
+                      "h-2.5 w-2.5 rounded-full transition-colors duration-300",
+                      active ? levelMeta[signalLevel].activeDotClass : "bg-foreground/15",
+                      active ? "shadow-[0_0_0_2px] shadow-white/5" : "",
+                    )}
+                  />
+                );
+              })}
+            </div>
           </div>
         )}
 
