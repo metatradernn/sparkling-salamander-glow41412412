@@ -50,10 +50,6 @@ export default function TelegramJoinDialog({
                     Access OK
                   </Badge>
                 </div>
-                <DialogDescription className="mt-1 text-left text-sm text-muted-foreground">
-                  Telegram не позволяет добавлять людей “автоматически”, поэтому
-                  нужно нажать «Вступить». Мы уже подготовили ссылку.
-                </DialogDescription>
               </div>
             </div>
           </div>
