@@ -1,16 +1,9 @@
 import { useMemo } from "react";
-import { showSuccess } from "@/utils/toast";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Copy, ExternalLink, ShieldCheck, UsersRound } from "lucide-react";
+import { ExternalLink, ShieldCheck, UsersRound } from "lucide-react";
 
 type TelegramJoinDialogProps = {
   open: boolean;
@@ -77,23 +70,10 @@ export default function TelegramJoinDialog({
                 </Button>
               </a>
 
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid gap-2">
                 <Button
                   type="button"
-                  variant="outline"
-                  className="h-11 rounded-xl border-border bg-background/40"
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(groupUrl);
-                    showSuccess("Ссылка скопирована.");
-                  }}
-                >
-                  <Copy className="h-4 w-4" />
-                  Скопировать ссылку
-                </Button>
-
-                <Button
-                  type="button"
-                  className="h-11 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90"
+                  className="h-11 w-full rounded-xl bg-accent text-accent-foreground hover:bg-accent/90"
                   onClick={onContinue}
                 >
                   Перейти к сигналам
