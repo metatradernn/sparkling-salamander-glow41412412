@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import AdminUnlockPanel from "@/components/ai-trade/AdminUnlockPanel";
+import TelegramJoinDialog from "@/components/ai-trade/TelegramJoinDialog";
 import {
   ArrowRight,
   CheckCircle2,
@@ -24,6 +25,7 @@ import {
 const RU_LINK = "https://po-ru4.click/smart/SLjZBE1edTSNUa";
 const CIS_LINK = "https://u3.shortink.io/smart/SLjZBE1edTSNUa";
 const TG_SUPPORT = "https://t.me/max_supportTraide";
+const TG_GROUP = "https://t.me/+YsVHQrXnJWwzYzQy";
 
 const OWNER_ID = "MaxLavrin";
 const ADMIN_PASSWORD = "AK5917906";
@@ -60,6 +62,7 @@ export default function OnboardingWizard() {
   const [traderId, setTraderId] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
   const [checking, setChecking] = useState(false);
+  const [tgJoinOpen, setTgJoinOpen] = useState(false);
 
   const isOwner = traderId.trim() === OWNER_ID;
 
@@ -161,7 +164,11 @@ export default function OnboardingWizard() {
     });
 
     showSuccess("Доступ открыт. Добро пожаловать в AI TRADE.");
-    navigate("/signals");
+
+    // Telegram не позволяет “добавить автоматически”, но мы открываем invite link
+    // в новой вкладке (как часть клика по кнопке “Проверить” обычно не блокируется).
+    window.open(TG_GROUP, "_blank", "noopener,noreferrer");
+    setTgJoinOpen(true);
   }
 
   return (
@@ -387,6 +394,16 @@ export default function OnboardingWizard() {
           <ArrowRight className="h-4 w-4" />
         </Button>
       </CardFooter>
+
+      <TelegramJoinDialog
+        open={tgJoinOpen}
+        onOpenChange={setTgJoinOpen}
+        groupUrl={TG_GROUP}
+        onContinue={() => {
+          setTgJoinOpen(false);
+          navigate("/signals");
+        }}
+      />
     </Card>
   );
 }
