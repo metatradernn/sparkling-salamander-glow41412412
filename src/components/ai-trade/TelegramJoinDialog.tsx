@@ -84,8 +84,8 @@ export default function TelegramJoinDialog({
             <Separator className="bg-border/70" />
 
             <p className="text-xs text-muted-foreground">
-              Если Telegram не открылся автоматически — используйте кнопку
-              «Вступить» или «Скопировать ссылку».
+              Это закрытый VIP-чат только для нашего сообщества. Если Telegram не
+              открылся автоматически — нажмите «Вступить в группу».
             </p>
           </div>
         </div>
